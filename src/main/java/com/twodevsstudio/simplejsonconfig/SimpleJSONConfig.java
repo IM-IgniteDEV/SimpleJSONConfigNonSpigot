@@ -2,35 +2,26 @@ package com.twodevsstudio.simplejsonconfig;
 
 import com.twodevsstudio.simplejsonconfig.api.AnnotationProcessor;
 import com.twodevsstudio.simplejsonconfig.exceptions.InstanceOverrideException;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 public enum SimpleJSONConfig {
     INSTANCE;
     
     private AnnotationProcessor annotationProcessor = new AnnotationProcessor();
-    private Map<Plugin, File> plugins = new HashMap<>();
+    private File directory;
+    private Object object;
     
-    public void register(JavaPlugin javaPlugin, File configsDirectory) {
+    public void register(Object object, File configsDirectory) {
         
-        if (plugins.containsKey(javaPlugin)) {
+        if (this.object != null) {
             throw new InstanceOverrideException();
         }
         
-        plugins.put(javaPlugin, configsDirectory);
-        annotationProcessor.processAnnotations(javaPlugin, configsDirectory);
+        this.object = object;
+        this.directory = configsDirectory;
         
-        //Update Fields in other plugins
-        plugins.keySet().forEach(annotationProcessor::processAutowired);
+        annotationProcessor.processAnnotations(object, configsDirectory);
+        annotationProcessor.processAutowired(object);
     }
-    
-    public void register(JavaPlugin javaPlugin) {
-        
-        register(javaPlugin, new File(javaPlugin.getDataFolder() + "/configuration"));
-    }
-    
 }

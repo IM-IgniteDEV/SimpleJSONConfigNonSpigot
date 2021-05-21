@@ -6,7 +6,6 @@ import com.twodevsstudio.simplejsonconfig.interfaces.Comment;
 import com.twodevsstudio.simplejsonconfig.interfaces.Configuration;
 import com.twodevsstudio.simplejsonconfig.utils.CustomLogger;
 import lombok.SneakyThrows;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
@@ -27,27 +26,43 @@ import static java.lang.reflect.Modifier.isStatic;
 
 public class AnnotationProcessor {
     
-    public void processAnnotations(@NotNull Plugin plugin, File configsDirectory) {
-    
-        ConfigurationBuilder builder = new ConfigurationBuilder();
-    
-        builder.addUrls(
-                ClasspathHelper.forPackage(plugin.getClass().getPackage().getName(), plugin.getClass().getClassLoader(),
-                        ClassLoader.getSystemClassLoader(), ClasspathHelper.contextClassLoader(),
-                        ClasspathHelper.staticClassLoader()
-                ));
-    
-        builder.addScanners(new TypeAnnotationsScanner(), new FieldAnnotationsScanner(), new SubTypesScanner());
-    
-        Reflections reflections = new Reflections(builder);
-    
-    
-        processConfiguration(configsDirectory, reflections);
-        processAutowired(reflections);
+    public AnnotationProcessor() {
     
     }
     
-    public AnnotationProcessor() {
+    public static Map<String, Comment> getFieldsComments(Object object) {
+        
+        Map<String, Comment> comments = new HashMap<>();
+        
+        for (Field declaredField : object.getClass().getDeclaredFields()) {
+            declaredField.setAccessible(true);
+            if (!declaredField.isAnnotationPresent(Comment.class)) {
+                continue;
+            }
+            
+            Comment comment = declaredField.getAnnotation(Comment.class);
+            comments.put(declaredField.getName(), comment);
+        }
+        
+        return comments;
+    }
+    
+    public void processAnnotations(Object anyMainClass, File configsDirectory) {
+        
+        ConfigurationBuilder builder = new ConfigurationBuilder();
+        
+        builder.addUrls(ClasspathHelper.forPackage(anyMainClass.getClass().getPackage().getName(),
+                anyMainClass.getClass().getClassLoader(), ClassLoader.getSystemClassLoader(),
+                ClasspathHelper.contextClassLoader(), ClasspathHelper.staticClassLoader()
+        ));
+        
+        builder.addScanners(new TypeAnnotationsScanner(), new FieldAnnotationsScanner(), new SubTypesScanner());
+        
+        Reflections reflections = new Reflections(builder);
+        
+        
+        processConfiguration(configsDirectory, reflections);
+        processAutowired(reflections);
         
     }
     
@@ -99,9 +114,9 @@ public class AnnotationProcessor {
     }
     
     @SneakyThrows
-    public void processAutowired(Plugin plugin) {
+    public void processAutowired(Object anyMainClassObject) {
         
-        Reflections reflections = new Reflections(plugin.getClass().getPackage().getName(),
+        Reflections reflections = new Reflections(anyMainClassObject.getClass().getPackage().getName(),
                 new TypeAnnotationsScanner(), new FieldAnnotationsScanner(), new SubTypesScanner()
         );
         
@@ -129,16 +144,16 @@ public class AnnotationProcessor {
     }
     
     public boolean isConfig(@NotNull Class<?> clazz) {
-    
+        
         return clazz.getSuperclass() == Config.class;
     }
     
     private void initConfig(@NotNull Config config, @NotNull File configFile) {
-    
-        config.configFile = configFile;
-    
-        if (!configFile.exists()) {
         
+        config.configFile = configFile;
+        
+        if (!configFile.exists()) {
+            
             try {
                 configFile.mkdirs();
                 configFile.createNewFile();
@@ -156,27 +171,9 @@ public class AnnotationProcessor {
                 CustomLogger.warning(config.getClass().getName() + ": Config file is corrupted");
                 return;
             }
-        
-        }
-    
-        ConfigContainer.SINGLETONS.put(config.getClass(), config);
-    }
-    
-    
-    public static Map<String, Comment> getFieldsComments(Object object) {
-        
-        Map<String, Comment> comments = new HashMap<>();
-        
-        for (Field declaredField : object.getClass().getDeclaredFields()) {
-            declaredField.setAccessible(true);
-            if (!declaredField.isAnnotationPresent(Comment.class)) {
-                continue;
-            }
             
-            Comment comment = declaredField.getAnnotation(Comment.class);
-            comments.put(declaredField.getName(), comment);
         }
         
-        return comments;
+        ConfigContainer.SINGLETONS.put(config.getClass(), config);
     }
 }

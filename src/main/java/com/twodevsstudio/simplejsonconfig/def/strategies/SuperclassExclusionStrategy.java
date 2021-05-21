@@ -10,10 +10,12 @@ import java.lang.reflect.Field;
 public class SuperclassExclusionStrategy implements ExclusionStrategy {
     
     public boolean shouldSkipClass(Class<?> arg0) {
+        
         return false;
     }
     
     public boolean shouldSkipField(@NotNull FieldAttributes fieldAttributes) {
+        
         String fieldName = fieldAttributes.getName();
         Class<?> theClass = fieldAttributes.getDeclaringClass();
         
@@ -21,14 +23,16 @@ public class SuperclassExclusionStrategy implements ExclusionStrategy {
     }
     
     private boolean isFieldInSuperclass(@NotNull Class<?> subclass, String fieldName) {
+        
         Class<?> superclass = subclass.getSuperclass();
         Field field;
         
         while (superclass != null) {
             field = getField(superclass, fieldName);
-            
-            if (field != null)
+    
+            if (field != null) {
                 return true;
+            }
             
             superclass = superclass.getSuperclass();
         }
@@ -38,6 +42,7 @@ public class SuperclassExclusionStrategy implements ExclusionStrategy {
     
     @Nullable
     private Field getField(Class<?> theClass, String fieldName) {
+        
         try {
             return theClass.getDeclaredField(fieldName);
         } catch (Exception e) {

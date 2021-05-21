@@ -1,28 +1,28 @@
 package com.twodevsstudio.simplejsonconfig.exceptions;
 
-public class AnnotationProcessException extends RuntimeException {
+public class DirectoryNotFoundException extends RuntimeException {
     
-    public AnnotationProcessException() {
+    public DirectoryNotFoundException() {
         
-        super("Annotations are already processed.");
+        super("Cannot find such directory");
     }
     
-    public AnnotationProcessException(String message) {
+    public DirectoryNotFoundException(String message) {
         
         super(message);
     }
     
-    public AnnotationProcessException(String message, Throwable cause) {
+    public DirectoryNotFoundException(String message, Throwable cause) {
         
         super(message, cause);
     }
     
-    public AnnotationProcessException(Throwable cause) {
+    public DirectoryNotFoundException(Throwable cause) {
         
         super(cause);
     }
     
-    public AnnotationProcessException(String message,
+    public DirectoryNotFoundException(String message,
                                       Throwable cause,
                                       boolean enableSuppression,
                                       boolean writableStackTrace
